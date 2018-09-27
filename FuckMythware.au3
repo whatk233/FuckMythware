@@ -7,7 +7,7 @@
 #AccAu3Wrapper_UseX64=n
 #AccAu3Wrapper_Res_Comment=https://github.com/whatk233/FuckMythware
 #AccAu3Wrapper_Res_Description=FuckMythware
-#AccAu3Wrapper_Res_Fileversion=1.0.0.9
+#AccAu3Wrapper_Res_Fileversion=1.0.0.11
 #AccAu3Wrapper_Res_Fileversion_AutoIncrement=y
 #AccAu3Wrapper_Res_ProductVersion=1.0
 #AccAu3Wrapper_Res_LegalCopyright=https://github.com/whatk233/FuckMythware
@@ -43,14 +43,16 @@ Else
 	Dim $Narrator_Btn = "替换讲述人"
 EndIf
 
-FileInstall("ntsd.exe", @TempDir & "\ntsd.exe")
 #Region ### START Koda GUI section ### Form=
 ;GUI
-$Main = GUICreate("FuckMythware", 295, 235, -1, -1)
-$Button1 = GUICtrlCreateButton("获取密码", 16, 24, 80, 33)
-$Button2 = GUICtrlCreateButton("强制结束", 103, 24, 80, 33)
-$Button3 = GUICtrlCreateButton($Narrator_Btn, 193, 24, 80, 33)
-Local $State = GUICtrlCreateEdit("FuckMythware" & @CRLF & "极域电子教室辅助工具" & @CRLF & "https://blog.whatk.me    By Whatk " & @CRLF & "https://github.com/whatk233/FuckMythware V1.0(20180918)" & @CRLF & @CRLF, 5, 100, 280, 120, $WS_VSCROLL + $ES_READONLY)
+$Main = GUICreate("FuckMythware", 320, 235, -1, -1)
+
+
+$Button1 = GUICtrlCreateButton("获取密码", 25, 20, 115, 30)
+$Button4 = GUICtrlCreateButton($Narrator_Btn, 170, 20, 115, 30)
+$Button2 = GUICtrlCreateButton("冻结进程", 25, 55, 115, 30)
+$Button3 = GUICtrlCreateButton("解冻进程", 170, 55, 115, 30)
+Local $State = GUICtrlCreateEdit("FuckMythware" & @CRLF & "极域电子教室辅助工具" & @CRLF & "https://blog.whatk.me    By Whatk " & @CRLF & "https://github.com/whatk233/FuckMythware V1.0(20180927)" & @CRLF & @CRLF, 5, 100, 305, 120, $WS_VSCROLL + $ES_READONLY)
 ;~ $Label1 = GUICtrlCreateLabel("关于", 72, 64, 28, 17)
 GUISetState(@SW_SHOW)
 #EndRegion ### END Koda GUI section ###
@@ -64,7 +66,7 @@ EndIf
 ;判断是否需要恢复讲述人
 If FileExists(@TempDir & "\FuckMythware.Recovery") = 1 Then
 	FileDelete(@TempDir & "\FuckMythware.Recovery") ;删除Flag文件
-	GUICtrlSetState($Button3, $GUI_DISABLE) ;关闭按钮防止重复操作
+	GUICtrlSetState($Button4, $GUI_DISABLE) ;关闭按钮防止重复操作
 	GUICtrlSetData($State, @CRLF & @CRLF & "即将恢复讲述人，请稍后", 1)
 	Sleep(1500) ;延时防止没完全退出
 	_Recovery_Narrator() ;恢复
@@ -78,8 +80,10 @@ While 1
 		Case $Button1
 			_GetPwd()
 		Case $Button2
-			_Kill()
+			_ProcessPause()
 		Case $Button3
+			_ProcessResume()
+		Case $Button4
 			_Narrator()
 	EndSwitch
 WEnd
@@ -104,27 +108,30 @@ Func _GetPwd()
 	EndIf
 EndFunc   ;==>_GetPwd
 
-;结束进程
-Func _Kill()
+;冻结进程
+Func _ProcessPause()
 	GUICtrlSetData($State, @CRLF & "请稍后" & @CRLF, 1)
-	;使用ntsd结束进程
-	$JY_PID = ProcessList("StudentMain.exe")
-	RunWait(@ComSpec & " /c " & @TempDir & '\ntsd.exe -c q -pn StudentMain.exe', @SW_HIDE)
-	;用Autoit函数结束进程
-	ProcessClose("StudentMain.exe")
-	ProcessClose("GATESRV.exe")
-	ProcessClose("MasterHelper.exe")
-	ProcessClose("ProcHelper.exe")
+	If ProcessExists("StudentMain.exe") Then _ProcessPauseSwitch("StudentMain.exe", True)
+	If ProcessExists("GATESRV.exe") Then _ProcessPauseSwitch("GATESRV.exe", True)
+	If ProcessExists("MasterHelper.exe") Then _ProcessPauseSwitch("MasterHelper.exe", True)
+	If ProcessExists("ProcHelper.exe") Then _ProcessPauseSwitch("ProcHelper.exe", True)
 	Sleep(1000)
-	If ProcessExists("StudentMain.exe") = False Then
-		GUICtrlSetData($State, @CRLF & "结束成功！", 1)
-	Else
-		GUICtrlSetData($State, @CRLF & "结束失败！", 1)
-	EndIf
-EndFunc   ;==>_Kill
+	GUICtrlSetData($State, @CRLF & "冻结完毕！", 1)
+EndFunc   ;==>_ProcessPause
+
+;解冻进程
+Func _ProcessResume()
+	GUICtrlSetData($State, @CRLF & "请稍后" & @CRLF, 1)
+	If ProcessExists("StudentMain.exe") Then _ProcessPauseSwitch("StudentMain.exe", False)
+	If ProcessExists("GATESRV.exe") Then _ProcessPauseSwitch("GATESRV.exe", False)
+	If ProcessExists("MasterHelper.exe") Then _ProcessPauseSwitch("MasterHelper.exe", False)
+	If ProcessExists("ProcHelper.exe") Then _ProcessPauseSwitch("ProcHelper.exe", False)
+	Sleep(1000)
+	GUICtrlSetData($State, @CRLF & "解冻完毕！", 1)
+EndFunc   ;==>_ProcessResume
 
 Func _Narrator()
-	GUICtrlSetState($Button3, $GUI_DISABLE) ;关闭按钮防止重复操作
+	GUICtrlSetState($Button4, $GUI_DISABLE) ;关闭按钮防止重复操作
 	If $Narrator_Flag = 0 Then ;如果Flag为关闭（没替换讲述人）则替换
 		_Replace_Narrator()
 		Return
@@ -206,13 +213,13 @@ Func _Replace_Narrator() ;替换讲述人
 	FileDelete(@TempDir & "\FuckMythware.Recovery") ;删除Flag文件
 	$Narrator_Flag = 1 ;设置flag为替换完毕
 	GUICtrlSetData($State, @CRLF & "替换完毕！", 1)
-	GUICtrlSetData($Button3, "恢复讲述人")
-	GUICtrlSetState($Button3, $GUI_ENABLE) ;启用按钮
+	GUICtrlSetData($Button4, "恢复讲述人")
+	GUICtrlSetState($Button4, $GUI_ENABLE) ;启用按钮
 	Return
 EndFunc   ;==>_Replace_Narrator
 
 Func _Recovery_Narrator() ;恢复讲述人
-	GUICtrlSetState($Button3, $GUI_DISABLE) ;关闭按钮防止重复操作
+	GUICtrlSetState($Button4, $GUI_DISABLE) ;关闭按钮防止重复操作
 	If "%Windir%\System32\narrator.exe" = @ScriptFullPath Or "%Windir%\SysWOW64\narrator.exe" = @ScriptFullPath Then ;如果自身目录为讲述人目录则复制到别处在进行替换操作)
 		MsgBox(0, "FuckMythware", "当前程序作为讲述人模式打开，无法进行恢复" & @CRLF & "点击“确定”后程序将复制自身到桌面再进行“恢复讲述人”")
 		Local $New_World = "FuckMythware_" & @MON & @MDAY & @HOUR & @MIN & ".exe" ;文件名
@@ -251,7 +258,22 @@ Func _Recovery_Narrator() ;恢复讲述人
 	EndIf
 	$Narrator_Flag = 0 ;设置flag为未替换
 	GUICtrlSetData($State, @CRLF & '完毕！', 1)
-	GUICtrlSetData($Button3, "替换讲述人")
-	GUICtrlSetState($Button3, $GUI_ENABLE) ;启用按钮
+	GUICtrlSetData($Button4, "替换讲述人")
+	GUICtrlSetState($Button4, $GUI_ENABLE) ;启用按钮
 EndFunc   ;==>_Recovery_Narrator
 
+;https://www.autoitscript.com/forum/topic/60717-process-suspendfreezestop/?do=findComment&comment=456476
+;可参考：https://www.autoitscript.com/forum/topic/32975-process-suspendprocess-resume-udf/
+Func _ProcessPauseSwitch($iPIDOrName, $iSuspend = True)
+	If IsString($iPIDOrName) Then $iPIDOrName = ProcessExists($iPIDOrName)
+	If Not $iPIDOrName Then Return SetError(1, 0, 0)
+	Local $ai_Handle = DllCall("kernel32.dll", 'int', 'OpenProcess', 'int', 0x1f0fff, 'int', False, 'int', $iPIDOrName)
+	If $iSuspend Then
+		Local $i_sucess = DllCall("ntdll.dll", "int", "NtSuspendProcess", "int", $ai_Handle[0])
+	Else
+		Local $i_sucess = DllCall("ntdll.dll", "int", "NtResumeProcess", "int", $ai_Handle[0])
+	EndIf
+	DllCall('kernel32.dll', 'ptr', 'CloseHandle', 'ptr', $ai_Handle)
+	If IsArray($i_sucess) Then Return 1
+	Return SetError(2, 0, 0)
+EndFunc   ;==>_ProcessPauseSwitch
