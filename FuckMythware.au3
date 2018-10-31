@@ -3,11 +3,10 @@
 #Region ;**** 由 AccAu3Wrapper_GUI 创建指令 ****
 #AccAu3Wrapper_Icon=Ico.ico
 #AccAu3Wrapper_Outfile=FuckMythware.exe
-#AccAu3Wrapper_UseUpx=y
 #AccAu3Wrapper_UseX64=n
 #AccAu3Wrapper_Res_Comment=https://github.com/whatk233/FuckMythware
 #AccAu3Wrapper_Res_Description=FuckMythware
-#AccAu3Wrapper_Res_Fileversion=1.0.0.11
+#AccAu3Wrapper_Res_Fileversion=1.0.2.2
 #AccAu3Wrapper_Res_Fileversion_AutoIncrement=y
 #AccAu3Wrapper_Res_ProductVersion=1.0
 #AccAu3Wrapper_Res_LegalCopyright=https://github.com/whatk233/FuckMythware
@@ -17,13 +16,14 @@
 #AccAu3Wrapper_Run_Au3Stripper=y
 #Au3Stripper_Parameters=/sf=1 /sv=1
 #EndRegion ;**** 由 AccAu3Wrapper_GUI 创建指令 ****
-If @OSArch = 'x64' Then DllCall("kernel32.dll", "int", "Wow64DisableWow64FsRedirection", "int", 1) ;x64 重定向
 #include <ButtonConstants.au3>
 #include <GUIConstantsEx.au3>
 #include <StaticConstants.au3>
 #include <WindowsConstants.au3>
 #include <EditConstants.au3>
 #include <WinAPIFiles.au3>
+If @OSArch = 'x64' Then DllCall("kernel32.dll", "int", "Wow64DisableWow64FsRedirection", "int", 1) ;x64 重定向
+Local $SysVer = Number(StringLeft(FileGetVersion(@WindowsDir & "\System32\Kernel32.dll", "ProductVersion"), 3)) ;系统版本，用于判断当前系统
 Opt("ExpandEnvStrings", 1) ;更改字符串原意和 % 符号的字面解释方式
 
 ;判断程序是否替换为讲述人
@@ -46,14 +46,14 @@ EndIf
 #Region ### START Koda GUI section ### Form=
 ;GUI
 $Main = GUICreate("FuckMythware", 320, 235, -1, -1)
-
-
 $Button1 = GUICtrlCreateButton("获取密码", 25, 20, 115, 30)
 $Button4 = GUICtrlCreateButton($Narrator_Btn, 170, 20, 115, 30)
-$Button2 = GUICtrlCreateButton("冻结进程", 25, 55, 115, 30)
-$Button3 = GUICtrlCreateButton("解冻进程", 170, 55, 115, 30)
-Local $State = GUICtrlCreateEdit("FuckMythware" & @CRLF & "极域电子教室辅助工具" & @CRLF & "https://blog.whatk.me    By Whatk " & @CRLF & "https://github.com/whatk233/FuckMythware V1.0(20180927)" & @CRLF & @CRLF, 5, 100, 305, 120, $WS_VSCROLL + $ES_READONLY)
+$Button2 = GUICtrlCreateButton("冻结进程", 20, 55, 90, 30)
+$Button3 = GUICtrlCreateButton("解冻进程", 115, 55, 90, 30)
+$Button5 = GUICtrlCreateButton("结束进程", 210, 55, 90, 30)
+Local $State = GUICtrlCreateEdit("FuckMythware" & @CRLF & "极域电子教室辅助工具" & @CRLF & "https://blog.whatk.me    By Whatk " & @CRLF & "https://github.com/whatk233/FuckMythware" & @CRLF & "V1.0.2(181031)" & @CRLF & @CRLF, 5, 100, 305, 120, $WS_VSCROLL + $ES_READONLY)
 ;~ $Label1 = GUICtrlCreateLabel("关于", 72, 64, 28, 17)
+GUISetFont(8, 400, 0, "微软雅黑")
 GUISetState(@SW_SHOW)
 #EndRegion ### END Koda GUI section ###
 If ProcessExists("StudentMain.exe") = True Then
@@ -85,6 +85,8 @@ While 1
 			_ProcessResume()
 		Case $Button4
 			_Narrator()
+		Case $Button5
+			_Kill()
 	EndSwitch
 WEnd
 ;获取密码
@@ -111,22 +113,26 @@ EndFunc   ;==>_GetPwd
 ;冻结进程
 Func _ProcessPause()
 	GUICtrlSetData($State, @CRLF & "请稍后" & @CRLF, 1)
-	If ProcessExists("StudentMain.exe") Then _ProcessPauseSwitch("StudentMain.exe", True)
-	If ProcessExists("GATESRV.exe") Then _ProcessPauseSwitch("GATESRV.exe", True)
-	If ProcessExists("MasterHelper.exe") Then _ProcessPauseSwitch("MasterHelper.exe", True)
-	If ProcessExists("ProcHelper.exe") Then _ProcessPauseSwitch("ProcHelper.exe", True)
-	Sleep(1000)
+	Local $ProcessName_Array = StringSplit("StudentMain.exe,GATESRV.exe,MasterHelper.exe,ProcHelper.exe", ",", 2)
+	For $ProcessName In $ProcessName_Array
+		If ProcessExists($ProcessName) Then ;检测进程是否存在，不存在则不操作
+			_ProcessPauseSwitch($ProcessName, True)
+		EndIf
+	Next
+	Sleep(500)
 	GUICtrlSetData($State, @CRLF & "冻结完毕！", 1)
 EndFunc   ;==>_ProcessPause
 
 ;解冻进程
 Func _ProcessResume()
 	GUICtrlSetData($State, @CRLF & "请稍后" & @CRLF, 1)
-	If ProcessExists("StudentMain.exe") Then _ProcessPauseSwitch("StudentMain.exe", False)
-	If ProcessExists("GATESRV.exe") Then _ProcessPauseSwitch("GATESRV.exe", False)
-	If ProcessExists("MasterHelper.exe") Then _ProcessPauseSwitch("MasterHelper.exe", False)
-	If ProcessExists("ProcHelper.exe") Then _ProcessPauseSwitch("ProcHelper.exe", False)
-	Sleep(1000)
+	Local $ProcessName_Array = StringSplit("StudentMain.exe,GATESRV.exe,MasterHelper.exe,ProcHelper.exe", ",", 2)
+	For $ProcessName In $ProcessName_Array
+		If ProcessExists($ProcessName) Then ;检测进程是否存在，不存在则不操作
+			_ProcessPauseSwitch($ProcessName, False)
+		EndIf
+	Next
+	Sleep(500)
 	GUICtrlSetData($State, @CRLF & "解冻完毕！", 1)
 EndFunc   ;==>_ProcessResume
 
@@ -261,6 +267,36 @@ Func _Recovery_Narrator() ;恢复讲述人
 	GUICtrlSetData($Button4, "替换讲述人")
 	GUICtrlSetState($Button4, $GUI_ENABLE) ;启用按钮
 EndFunc   ;==>_Recovery_Narrator
+
+Func _Kill()
+	GUICtrlSetState($Button5, $GUI_DISABLE) ;关闭按钮防止重复操作
+	GUICtrlSetData($State, @CRLF & "结束进程中..." & @CRLF, 1)
+	FileInstall("ntsd.exe", @TempDir & "\ntsd.exe") ;释放ntsd到临时目录
+	Local $ProcessName_Array = StringSplit("StudentMain.exe,GATESRV.exe,MasterHelper.exe,ProcHelper.exe", ",", 2)
+	For $ProcessName In $ProcessName_Array
+		If ProcessExists($ProcessName) Then ;检测进程是否存在，不存在则不操作
+			If $SysVer <> "10.0" Then ;Win10貌似不能用ntsd，所以提示
+				_Ntsd($ProcessName) ;Ntsd结束进程
+			Else
+				GUICtrlSetData($State, @CRLF & "Win10 暂不支持使用 Ntsd 结束带保护进程，我们也在找解决方案" & @CRLF, 1)
+			EndIf
+			ProcessClose($ProcessName) ;AU3自带函数结束进程
+			Sleep(500) ;暂停0.5秒
+			If ProcessExists($ProcessName) Then ;检测进程是否存在并返回提示
+				GUICtrlSetData($State, @CRLF & "结束 " & StringTrimRight($ProcessName, 4) & " 失败！" & @CRLF, 1)
+			Else
+				GUICtrlSetData($State, @CRLF & "结束 " & StringTrimRight($ProcessName, 4) & " 成功！" & @CRLF, 1)
+			EndIf
+		EndIf
+	Next
+	FileDelete(@TempDir & "\ntsd.exe")
+	GUICtrlSetData($State, @CRLF & "结束进程执行完毕！" & @CRLF, 1)
+	GUICtrlSetState($Button5, $GUI_ENABLE) ;启用按钮
+EndFunc   ;==>_Kill
+
+Func _Ntsd($ProcessName) ;ntsd貌似不支持Win10
+	RunWait(@TempDir & "\ntsd.exe -c q -pn " & $ProcessName, "", @SW_HIDE)
+EndFunc   ;==>_Ntsd
 
 ;https://www.autoitscript.com/forum/topic/60717-process-suspendfreezestop/?do=findComment&comment=456476
 ;可参考：https://www.autoitscript.com/forum/topic/32975-process-suspendprocess-resume-udf/
