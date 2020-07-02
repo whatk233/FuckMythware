@@ -1,5 +1,9 @@
 # FuckMythware - 极域电子教室辅助软件
 
+# 练手作品，已停止更新
+
+# 建议使用功能性更强的  [JiYuTrainer](https://github.com/imengyu/JiYuTrainer) 
+
 ### 目前支持功能：
 > 获取管理员密码  
 > 冻结进程  
